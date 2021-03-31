@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+    purpose: example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      purpose: example
+  template:
+    metadata:
+      labels:
+        app: grafana
+        purpose: example
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-data
+      volumes:
+      - name: grafana-data
+        hostPath:
+          path: /home/opt/grafana
+          type: Directory
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana-service
+spec:
+  selector:
+    app: grafana
+    purpose: example
+  type: NodePort
+  ports:
+  - name: grafanaweb
+    protocol: TCP
+    port: 3000
+    targetPort: 3000

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observability
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.17.1
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        ports:
+        - containerPort: 9090
+      - name: grafana
+        image: grafana/grafana:6.7.2
+        ports:
+        - containerPort: 3000
+      volumes:
+      - name: config-volume
+        configMap:
+         name: prometheus-cm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: prometheus-service
+spec:
+  type: NodePort
+  ports:
+  - name: promui
+    protocol: TCP
+    port: 9090
+    targetPort: 9090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana-service
+spec:
+  type: NodePort
+  ports:
+  - name: grafanaweb
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+

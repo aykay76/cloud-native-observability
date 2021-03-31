@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observability
+  labels:
+    deployment: observability
+    purpose: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: observability
+      purpose: development
+  template:
+    metadata:
+      labels:
+        pod: observability
+        purpose: development
+    spec:
+      #serviceAccountName: prometheus
+      containers:
+      - name: prometheus
+        image: prom/prometheus
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        ports:
+        - containerPort: 9090
+      - name: grafana
+        image: grafana/grafana
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-data
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-cm
+      - name: grafana-data
+        hostPath:
+          path: /home/opt/grafana
+          type: DirectoryOrCreate
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: obs-service
+spec:
+  selector:
+    pod: observability
+    purpose: development
+  type: NodePort
+  ports:
+  - name: promui
+    protocol: TCP
+    port: 9090
+    targetPort: 9090
+  - name: grafanaweb
+    protocol: TCP
+    port: 3000
+    targetPort: 3000

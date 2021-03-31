@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+    app: fluentd
+    purpose: example
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+      purpose: example
+  template:
+    metadata:
+      labels:
+        app: fluentd
+        purpose: example
+    spec:
+      serviceAccountName: fluentd
+      containers:
+      - name: fluentd
+        image: fluent/fluentd:edge
+        volumeMounts:
+          - name: config-volume
+            mountPath: /fluentd/etc/fluentd.conf
+            subPath: fluentd.conf
+        ports:
+        - containerPort: 9090
+      volumes:
+        - name: config-volume
+          configMap:
+           name: fluentd-cm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fluentd-service
+spec:
+  selector:
+    app: fluentd
+    purpose: example
+  type: NodePort
+  ports:
+  - name: fluentd
+    protocol: TCP
+    port: 24224
+    targetPort: 24224
